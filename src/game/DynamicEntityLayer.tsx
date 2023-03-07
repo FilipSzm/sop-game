@@ -2,7 +2,7 @@ import {DynamicEntityData} from "./util/DataInterfaces";
 import * as PIXI from "pixi.js";
 import {Sprite} from "@pixi/react";
 import {useMemo} from "react";
-import {getTextureDimensions, resizePosition} from "./util/Utils";
+import {getTextureDimensions, scaleDimensions} from "./util/Utils";
 
 
 interface DynamicEntityLayerProps {
@@ -16,7 +16,7 @@ export const DynamicEntityLayer = (props: DynamicEntityLayerProps) => {
 
     const position = useMemo(() => {
         const textureDimensions = getTextureDimensions(props.data!.texture)
-        const resizedPosition = resizePosition(props.data!.mousePosition, props.scale, textureDimensions)
+        const resizedPosition = scaleDimensions(props.data!.mousePosition, props.scale, textureDimensions)
 
         return new PIXI.Point(
             props.currentMousePosition!.x - resizedPosition.x,

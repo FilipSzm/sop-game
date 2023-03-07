@@ -11,13 +11,14 @@ export interface EntityData {
     visible: boolean;
 }
 
-export interface EntityMoveData {
-    id: number;
-    mousePosition: PIXI.Point;
-}
-
 export interface DynamicEntityData {
     id: number;
     texture: PIXI.Texture;
+    mousePosition: PIXI.Point;
+}
+
+
+export interface EntityMoveData {
+    id: number;
     mousePosition: PIXI.Point;
 }

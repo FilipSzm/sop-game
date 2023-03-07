@@ -1,13 +1,13 @@
 import * as PIXI from 'pixi.js';
 import {Container, Stage} from "@pixi/react";
 import {
-    calculateNewOffset,
-    calculateNewScale,
-    calculateOffset, calculatePosition,
+    calculateOffsetAfterScaleChange,
+    calculateNextScale,
+    calculateOffsetAfterMove, calculatePosition,
     getArray,
     getCurrentSize, getEntities,
     getLocalPosition, getTextureDimensions,
-    INITIAL_SCALE, NUMBER_OF_TILES_IN_ROW, resizePosition, validateOffset, validatePosition,
+    INITIAL_SCALE, NUMBER_OF_TILES_IN_ROW, scaleDimensions, validateOffset, validatePosition,
     VIEW_SIZE
 } from "./util/Utils";
 import React, {useCallback, useState} from "react";
@@ -35,7 +35,7 @@ export const Map = () => {
         const entity = entities.filter((e) => e.id === data.id)[0]
         const entityPosition = calculatePosition(entity.cords, offset, scale)
         const textureDimensions = getTextureDimensions(entity.texture)
-        const resizedMousePosition = resizePosition(data.mousePosition, scale, textureDimensions)
+        const resizedMousePosition = scaleDimensions(data.mousePosition, scale, textureDimensions)
 
         setMousePosition(new PIXI.Point(
             entityPosition.x + resizedMousePosition.x,
@@ -72,7 +72,7 @@ export const Map = () => {
             }
             
             const currentSize = getCurrentSize(scale)
-            const offset = calculateOffset(temporaryOffset, localPosition, root)
+            const offset = calculateOffsetAfterMove(temporaryOffset, localPosition, root)
             setOffset(validateOffset(offset, currentSize))
         }
 
@@ -97,7 +97,7 @@ export const Map = () => {
                 dynamicEntity?.mousePosition.x! - (textureDimensions[0] / 2),
                 dynamicEntity?.mousePosition.y! - (textureDimensions[1] / 2)
             )
-            const resizedDistanceFromCenter = resizePosition(distanceFromCenter, scale, textureDimensions)
+            const resizedDistanceFromCenter = scaleDimensions(distanceFromCenter, scale, textureDimensions)
 
             const currentSize = getCurrentSize(scale)
             const mapPosition = validatePosition(new PIXI.Point(
@@ -139,8 +139,8 @@ export const Map = () => {
     const onWheel: React.WheelEventHandler<HTMLCanvasElement> = useCallback((e) => {
 
         const localPosition = getLocalPosition(e)
-        const newScale = calculateNewScale(scale, e)
-        const newOffset = calculateNewOffset(offset, localPosition, scale, newScale)
+        const newScale = calculateNextScale(scale, e)
+        const newOffset = calculateOffsetAfterScaleChange(offset, localPosition, scale, newScale)
         const currentSize = getCurrentSize(newScale)
 
         setScale(newScale)
