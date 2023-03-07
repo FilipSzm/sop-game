@@ -1,11 +1,10 @@
-import * as PIXI from 'pixi.js';
 import {Container} from "@pixi/react";
 import {TileData} from "./util/DataInterfaces";
 import {calculatePosition} from "./util/Utils";
 import {Terrain} from "./Terrain";
 import {useMemo} from "react";
 
-const transformTiles = (tiles: TileData[][], offset: PIXI.Point, scale: number) => {
+const transformTiles = (tiles: TileData[][], offset: number[], scale: number) => {
 
     return tiles.flatMap((row, i) =>
         row.map((data, j) => {
@@ -20,7 +19,7 @@ const transformTiles = (tiles: TileData[][], offset: PIXI.Point, scale: number) 
 interface TerrainLayerProps {
     tiles: TileData[][];
     scale: number;
-    offset: PIXI.Point;
+    offset: number[];
     zIndex: number;
 }
 

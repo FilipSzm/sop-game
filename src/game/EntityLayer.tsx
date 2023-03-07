@@ -1,4 +1,3 @@
-import * as PIXI from 'pixi.js';
 import {Container} from "@pixi/react";
 import {EntityData, EntityMoveData} from "./util/DataInterfaces";
 import {calculatePosition} from "./util/Utils";
@@ -6,7 +5,7 @@ import {Entity} from "./Entity";
 import {useMemo} from "react";
 
 
-const transformEntities = (entities: EntityData[], offset: PIXI.Point, scale: number, onEntityMove: (emd: EntityMoveData)=>void) => {
+const transformEntities = (entities: EntityData[], offset: number[], scale: number, onEntityMove: (emd: EntityMoveData)=>void) => {
     
     return entities.filter((e) => e.visible).map((e) => {
         const position = calculatePosition(e.cords, offset, scale)
@@ -19,7 +18,7 @@ interface EntityLayerProps {
     zIndex: number;
     onEntityMove: (emd: EntityMoveData)=>void;
     entities: EntityData[];
-    offset: PIXI.Point;
+    offset: number[];
     scale: number;
 }
 

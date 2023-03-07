@@ -22,8 +22,8 @@ export const Map = () => {
     const [scale, setScale] = useState(INITIAL_SCALE)
     const [RMB, setRMB] = useState(false)
     const [LMB, setLMB] = useState(false)
-    const [offset, setOffset] = useState(new PIXI.Point(0, 0))
-    const [temporaryOffset, setTemporaryOffset] = useState<PIXI.Point | undefined>(undefined)
+    const [offset, setOffset] = useState([0, 0])
+    const [temporaryOffset, setTemporaryOffset] = useState<number[] | undefined>(undefined)
     const [mousePosition, setMousePosition] = useState<PIXI.Point | undefined>(undefined)
     const [root, setRoot] = useState<PIXI.Point | undefined>(undefined)
     const [tiles] = useState(getArray(NUMBER_OF_TILES_IN_ROW))
@@ -101,8 +101,8 @@ export const Map = () => {
 
             const currentSize = getCurrentSize(scale)
             const mapPosition = validatePosition(new PIXI.Point(
-                localPosition.x - offset.x - resizedDistanceFromCenter.x,
-                localPosition.y - offset.y - resizedDistanceFromCenter.y
+                localPosition.x - offset[0] - resizedDistanceFromCenter.x,
+                localPosition.y - offset[1] - resizedDistanceFromCenter.y
             ), currentSize)
 
             const entityCords = [
@@ -134,7 +134,7 @@ export const Map = () => {
             setLMB(false)
             setDynamicEntity(undefined)
         }
-    }, [LMB, dynamicEntity, entities, offset.x, offset.y, scale])
+    }, [LMB, dynamicEntity, entities, offset, scale])
 
     const onWheel: React.WheelEventHandler<HTMLCanvasElement> = useCallback((e) => {
 

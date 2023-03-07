@@ -13,14 +13,14 @@ export const SCROLL_SPEED = 1.05
 export const VIEW_SIZE = MIN_SCALE * NUMBER_OF_TILES_IN_ROW
 
 
-export const calculatePosition = (cords: number[], offset: PIXI.Point, scale: number) => {
+export const calculatePosition = (cords: number[], offset: number[], scale: number) => {
     return new PIXI.Point(
-        cords[0] * scale + offset.x,
-        cords[1] * scale + offset.y
+        cords[0] * scale + offset[0],
+        cords[1] * scale + offset[1]
     )
 }
 
-export const validateOffset = (offset: PIXI.Point, currentSize: number) => {
+export const validateOffset = (offset: number[], currentSize: number) => {
 
     const validateSingle = (cord: number) => {
         if (cord < VIEW_SIZE - currentSize) {
@@ -31,13 +31,13 @@ export const validateOffset = (offset: PIXI.Point, currentSize: number) => {
         return cord
     }
 
-    return offset.set(
-        validateSingle(offset.x),
-        validateSingle(offset.y)
-    )
+    return [
+        validateSingle(offset[0]),
+        validateSingle(offset[1])
+    ]
 }
 
-export const validatePosition = (offset: PIXI.Point, currentSize: number) => {
+export const validatePosition = (position: PIXI.Point, currentSize: number) => {
 
     const validateSingle = (cord: number) => {
         if (cord > currentSize) {
@@ -48,9 +48,9 @@ export const validatePosition = (offset: PIXI.Point, currentSize: number) => {
         return cord
     }
 
-    return offset.set(
-        validateSingle(offset.x),
-        validateSingle(offset.y)
+    return new PIXI.Point(
+        validateSingle(position.x),
+        validateSingle(position.y)
     )
 }
 
@@ -64,11 +64,11 @@ export const getCurrentSize = (scale: number) => {
     return NUMBER_OF_TILES_IN_ROW * scale
 }
 
-export const calculateOffset = (currentOffset: PIXI.Point, mousePosition: PIXI.Point, root: PIXI.Point) => {
-    return new PIXI.Point(
-        currentOffset?.x + (mousePosition?.x - root.x) * MOVE_SPEED,
-        currentOffset?.y + (mousePosition?.y - root.y) * MOVE_SPEED
-    )
+export const calculateOffset = (currentOffset: number[], mousePosition: PIXI.Point, root: PIXI.Point) => {
+    return [
+        currentOffset[0] + (mousePosition?.x - root.x) * MOVE_SPEED,
+        currentOffset[1] + (mousePosition?.y - root.y) * MOVE_SPEED
+    ]
 }
 
 export const calculateNewScale = (scale: number, e: React.WheelEvent<HTMLCanvasElement>) => {
@@ -83,13 +83,13 @@ export const calculateNewScale = (scale: number, e: React.WheelEvent<HTMLCanvasE
     return scale
 }
 
-export const calculateNewOffset = (offset: PIXI.Point, mousePosition: PIXI.Point, oldScale: number, newScale: number) => {
+export const calculateNewOffset = (offset: number[], mousePosition: PIXI.Point, oldScale: number, newScale: number) => {
     const scaleRatio = newScale / oldScale
 
-    return new Point(
-        scaleRatio * (offset.x - mousePosition.x) + mousePosition.x,
-        scaleRatio * (offset.y - mousePosition.y) + mousePosition.y
-    )
+    return [
+        scaleRatio * (offset[0] - mousePosition.x) + mousePosition.x,
+        scaleRatio * (offset[1] - mousePosition.y) + mousePosition.y
+    ]
 }
 
 export const getTextureDimensions = (texture: PIXI.Texture) => {
