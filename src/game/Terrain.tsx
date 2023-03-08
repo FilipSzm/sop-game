@@ -1,10 +1,10 @@
 import {TileData} from "./util/DataInterfaces";
-import {Point} from "pixi.js";
+import * as PIXI from "pixi.js";
 import {Sprite} from "@pixi/react";
 
 interface TerrainProps {
     data: TileData;
-    position: Point;
+    position: PIXI.Point;
     size: number;
 }
 

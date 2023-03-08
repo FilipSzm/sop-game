@@ -104,6 +104,44 @@ export const calculateOffsetAfterScaleChange = (offset: number[], mousePosition:
     ]
 }
 
+export const calculateMousePositionRelativeToContainer = (entity: EntityData, mousePosition: PIXI.Point, scale: number, offset: number[]) => {
+    const entityPosition = calculatePosition(entity.cords, offset, scale)
+    const textureDimensions = getTextureDimensions(entity.texture)
+    const resizedMousePosition = scaleDimensions(mousePosition, scale, textureDimensions)
+
+    return new PIXI.Point(
+        entityPosition.x + resizedMousePosition.x,
+        entityPosition.y + resizedMousePosition.y
+    )
+}
+
+export const getPositionRelativeToCenter = (position: PIXI.Point, dimensions: number[]) => {
+    return new PIXI.Point(
+        position.x! - (dimensions[0] / 2),
+        position.y! - (dimensions[1] / 2)
+    )
+}
+
+export const getCordsFromPosition = (position: PIXI.Point, scale: number) => {
+    return [
+        Math.floor(position.x / scale),
+        Math.floor(position.y / scale)
+    ]
+}
+
+export const findPositionRelativeToRoot = (position: PIXI.Point, root: PIXI.Point) => {
+    return new PIXI.Point(
+        position.x - root.x,
+        position.y - root.y
+    )
+}
+
+export const subtractOffset = (position: PIXI.Point, offset: number[]) => {
+    return new PIXI.Point(
+        position.x - offset[0],
+        position.y - offset[1]
+    )
+}
 
 // TEMP
 export const getArray = (size: number): TileData[][] => {

@@ -3,12 +3,22 @@ import {Container, Stage} from "@pixi/react";
 import {
     calculateOffsetAfterScaleChange,
     calculateNextScale,
-    calculateOffsetAfterMove, calculatePosition,
+    calculateOffsetAfterMove,
     getArray,
-    getCurrentSize, getEntities,
-    getLocalPosition, getTextureDimensions,
-    INITIAL_SCALE, NUMBER_OF_TILES_IN_ROW, scaleDimensions, validateOffset, validatePosition,
-    VIEW_SIZE
+    getCurrentSize,
+    getEntities,
+    getLocalPosition,
+    getTextureDimensions,
+    INITIAL_SCALE,
+    NUMBER_OF_TILES_IN_ROW,
+    scaleDimensions,
+    validateOffset,
+    validatePosition,
+    VIEW_SIZE,
+    calculateMousePositionRelativeToContainer,
+    getPositionRelativeToCenter,
+    getCordsFromPosition,
+    findPositionRelativeToRoot, subtractOffset
 } from "./util/Utils";
 import React, {useCallback, useState} from "react";
 import {TerrainLayer} from "./TerrainLayer";
@@ -33,14 +43,9 @@ export const Map = () => {
 
     const onEntityMove = useCallback((data: EntityMoveData) => {
         const entity = entities.filter((e) => e.id === data.id)[0]
-        const entityPosition = calculatePosition(entity.cords, offset, scale)
-        const textureDimensions = getTextureDimensions(entity.texture)
-        const resizedMousePosition = scaleDimensions(data.mousePosition, scale, textureDimensions)
+        const adjustedMousePosition = calculateMousePositionRelativeToContainer(entity, data.mousePosition, scale, offset)
 
-        setMousePosition(new PIXI.Point(
-            entityPosition.x + resizedMousePosition.x,
-            entityPosition.y + resizedMousePosition.y
-        ))
+        setMousePosition(adjustedMousePosition)
         setLMB(true)
         setEntities([
             ...entities.filter((e) => e.id !== data.id),
@@ -64,20 +69,16 @@ export const Map = () => {
     }, [offset])
 
     const onMouseMove: React.MouseEventHandler<HTMLCanvasElement> = useCallback((e) => {
-        const localPosition = getLocalPosition(e)
+        const localMousePosition = getLocalPosition(e)
 
         if (RMB) {
-            if (root === undefined || temporaryOffset === undefined) {
-                return
-            }
-            
             const currentSize = getCurrentSize(scale)
-            const offset = calculateOffsetAfterMove(temporaryOffset, localPosition, root)
-            setOffset(validateOffset(offset, currentSize))
+            const newOffset = calculateOffsetAfterMove(temporaryOffset!, localMousePosition, root!)
+            setOffset(validateOffset(newOffset, currentSize))
         }
 
         if (LMB) {
-            setMousePosition(localPosition)
+            setMousePosition(localMousePosition)
         }
     }, [LMB, RMB, root, scale, temporaryOffset])
 
@@ -89,64 +90,54 @@ export const Map = () => {
         }
 
         if (e.button === 0 && LMB) {
-            const localPosition = getLocalPosition(e)
-            const entity = dynamicEntity
-
-            const textureDimensions = getTextureDimensions(entity!.texture)
-            const distanceFromCenter = new PIXI.Point(
-                dynamicEntity?.mousePosition.x! - (textureDimensions[0] / 2),
-                dynamicEntity?.mousePosition.y! - (textureDimensions[1] / 2)
+            const textureDimensions = getTextureDimensions(dynamicEntity!.texture)
+            const rootRelativeToCenter = getPositionRelativeToCenter(dynamicEntity?.mousePosition!, textureDimensions)
+            const positionRelativeToRoot = findPositionRelativeToRoot(
+                getLocalPosition(e),
+                scaleDimensions(rootRelativeToCenter, scale, textureDimensions)
             )
-            const resizedDistanceFromCenter = scaleDimensions(distanceFromCenter, scale, textureDimensions)
 
-            const currentSize = getCurrentSize(scale)
-            const mapPosition = validatePosition(new PIXI.Point(
-                localPosition.x - offset[0] - resizedDistanceFromCenter.x,
-                localPosition.y - offset[1] - resizedDistanceFromCenter.y
-            ), currentSize)
+            const mapPosition = subtractOffset(positionRelativeToRoot, offset)
+            const entityCords = getCordsFromPosition(
+                validatePosition(mapPosition, getCurrentSize(scale)),
+                scale
+            )
 
-            const entityCords = [
-                Math.floor(mapPosition.x / scale),
-                Math.floor(mapPosition.y / scale)
-            ]
-
-            setEntities([...entities.filter((e) => e.id !== entity?.id), {
-                id: entity?.id!,
-                texture: entity?.texture!,
+            setLMB(false)
+            setMousePosition(undefined)
+            setDynamicEntity(undefined)
+            setEntities([...entities.filter((e) => e.id !== dynamicEntity?.id), {
+                id: dynamicEntity?.id!,
+                texture: dynamicEntity?.texture!,
                 cords: entityCords,
                 visible: true
             }])
-
-            setMousePosition(undefined)
-            setLMB(false)
-            setDynamicEntity(undefined)
         }
 
         if (e.button === -1 && LMB) {
             const entity = entities.filter((e) => e.id === dynamicEntity?.id)[0]
 
+            setLMB(false)
+            setMousePosition(undefined)
+            setDynamicEntity(undefined)
             setEntities([...entities.filter((e) => e.id !== entity?.id), {
                 ...entity,
                 visible: true
             }])
-
-            setMousePosition(undefined)
-            setLMB(false)
-            setDynamicEntity(undefined)
         }
     }, [LMB, dynamicEntity, entities, offset, scale])
 
     const onWheel: React.WheelEventHandler<HTMLCanvasElement> = useCallback((e) => {
 
-        const localPosition = getLocalPosition(e)
+        const localMousePosition = getLocalPosition(e)
         const newScale = calculateNextScale(scale, e)
-        const newOffset = calculateOffsetAfterScaleChange(offset, localPosition, scale, newScale)
+        const newOffset = calculateOffsetAfterScaleChange(offset, localMousePosition, scale, newScale)
         const currentSize = getCurrentSize(newScale)
 
         setScale(newScale)
         setOffset(validateOffset(newOffset, currentSize))
         if (LMB) {
-            setMousePosition(localPosition)
+            setMousePosition(localMousePosition)
         }
     }, [LMB, offset, scale])
 
@@ -161,8 +152,10 @@ export const Map = () => {
                onWheel={onWheel}>
             <Container scale={1} position={0} sortableChildren={true}>
                 <TerrainLayer tiles={tiles} scale={scale} offset={offset} zIndex={0}/>
-                <EntityLayer onEntityMove={onEntityMove} entities={entities} offset={offset} scale={scale} zIndex={100}/>
-                {LMB && <DynamicEntityLayer data={dynamicEntity} scale={scale} currentMousePosition={mousePosition} zIndex={200}/>}
+                <EntityLayer onEntityMove={onEntityMove} entities={entities} offset={offset} scale={scale}
+                             zIndex={100}/>
+                {LMB && <DynamicEntityLayer data={dynamicEntity} scale={scale} currentMousePosition={mousePosition}
+																						zIndex={200}/>}
             </Container>
         </Stage>
     )

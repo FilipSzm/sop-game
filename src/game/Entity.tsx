@@ -1,18 +1,22 @@
 import {EntityData, EntityMoveData} from "./util/DataInterfaces";
-import {Point} from "pixi.js";
 import {Sprite} from "@pixi/react";
-import React, {useCallback} from "react";
+import React, {useCallback, useMemo} from "react";
+import {calculatePosition} from "./util/Utils";
 
 
 interface EntityProps {
     data: EntityData;
-    position: Point;
-    size: number;
+    scale: number;
+    offset: number[];
     onEntityMove: (emd: EntityMoveData)=>void;
 }
 
 export const Entity = (props: EntityProps) => {
 
+    const position = useMemo(() => {
+        return calculatePosition(props.data.cords, props.offset, props.scale)
+    }, [props.data.cords, props.offset, props.scale])
+    
     const onMouseDown = useCallback((e: { currentTarget: any; global: any; }) =>{
         const sprite = e.currentTarget;
         const localMousePosition = sprite.toLocal(e.global)
@@ -26,10 +30,10 @@ export const Entity = (props: EntityProps) => {
     return (
         <Sprite 
             interactive
-            position={props.position}
+            position={position}
             texture={props.data.texture} 
-            width={props.size} 
-            height={props.size} 
+            width={props.scale} 
+            height={props.scale} 
             mousedown={onMouseDown}/>
     )
 }

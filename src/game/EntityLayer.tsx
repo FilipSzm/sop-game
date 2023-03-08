@@ -1,6 +1,5 @@
 import {Container} from "@pixi/react";
 import {EntityData, EntityMoveData} from "./util/DataInterfaces";
-import {calculatePosition} from "./util/Utils";
 import {Entity} from "./Entity";
 import {useMemo} from "react";
 
@@ -8,9 +7,7 @@ import {useMemo} from "react";
 const transformEntities = (entities: EntityData[], offset: number[], scale: number, onEntityMove: (emd: EntityMoveData)=>void) => {
     
     return entities.filter((e) => e.visible).map((e) => {
-        const position = calculatePosition(e.cords, offset, scale)
-        
-        return <Entity data={e} position={position} size={scale} onEntityMove={onEntityMove} key={e.id}/>
+        return <Entity data={e} scale={scale} offset={offset} onEntityMove={onEntityMove} key={e.id}/>
     })
 }
 
